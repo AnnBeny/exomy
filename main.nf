@@ -360,6 +360,8 @@ process spojitannovarVEP {
         tag "spojitannovarVEP on $name"
         publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
         // awk '{for(\i=1;\i<=4;\i++) printf "%s ", $i; for(\i=15;\i<=19;\i++) printf "%s ", $i; for(i=50;i<=51;i++) printf "%s ", $i; for(i=5;i<=14;i++) printf "%s ", $i; for(i=20;i<=49;i++) printf "%s ", $i; for(i=52;i<=60;i++) printf "%s ", $i; printf "\n" }' spojeni > ${name}.merged.txt
+        container "rocker/tidyverse:4"
+        
         input:
         tuple val(name), val(sample), path(final_txt), path(vep_txt)
 
@@ -375,7 +377,10 @@ process spojitannovarVEP {
         
         awk '{print \$1, \$2, \$3, \$4, \$15, \$16, \$17, \$18, \$19, \$50, \$51, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$48, \$49, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60}' spojeni > ${name}.merged.txt
         
-sed -i 's/ /\t/'g ${name}.merged.txt
+        sed -i 's/ /\t/'g ${name}.merged.txt
+
+        source activate erko
+        Rscript --vanilla ${params.gene_filter} ${name}.merged.txt ${params.gene_list}
         """
 }
 
