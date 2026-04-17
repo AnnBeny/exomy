@@ -50,8 +50,19 @@ filtered_df <- filter_df(input_file, selected_genes)
 
 print(paste("Number of filtered rows:", nrow(filtered_df)))
 
+print(paste("Saved filtered file to:", output_file))
+
+print(paste("R getwd:", getwd()))
+print(paste("Input exists:", file.exists(input_file)))
+
 output_file <- sub("\\.merged\\.txt$", ".filtered.merged.txt", input_file)
 
 write.table(filtered_df, output_file, sep = "\t", quote = FALSE, row.names = FALSE)
 
-print(paste("Saved filtered file to:", output_file))
+
+print(paste("Output file variable:", output_file))
+
+print(paste("Output exists after write:", file.exists(output_file)))
+print(paste("Normalized output path:", normalizePath(output_file, mustWork = FALSE)))
+print("Files in current directory after write:")
+print(list.files())
