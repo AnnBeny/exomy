@@ -379,7 +379,6 @@ process spojitannovarVEP {
         
         sed -i 's/ /\t/'g ${name}.merged.txt
 
-        source activate erko
         Rscript --vanilla ${params.gene_filter} ${name}.merged.txt ${params.gene_list}
         """
 }
