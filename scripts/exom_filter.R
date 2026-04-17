@@ -60,9 +60,10 @@ output_file <- sub("\\.merged\\.txt$", ".filtered.merged.txt", input_file)
 write.table(filtered_df, output_file, sep = "\t", quote = FALSE, row.names = FALSE)
 
 
-print(paste("Output file variable:", output_file))
-
 print(paste("Output exists after write:", file.exists(output_file)))
-print(paste("Normalized output path:", normalizePath(output_file, mustWork = FALSE)))
-print("Files in current directory after write:")
+
+print("Files in current directory:")
 print(list.files())
+
+print("Absolute path of output (if exists):")
+print(normalizePath(output_file, mustWork = FALSE))
