@@ -366,7 +366,7 @@ process spojitannovarVEP {
         tuple val(name), val(sample), path(final_txt), path(vep_txt)
 
         output:
-        path("${name}.merged.txt")
+        path("${name}.merged.txt"), path("${name}.filtered.merged.txt")
 
         script:
         """
