@@ -29,3 +29,6 @@ BRONCO  genoderm  HBOC  hemato  lipanek  LYNCH  pojiva  prekonc  skelet
 pridany sloupec z vep anotace VEP_consequence
 
 -----------------------------------------------------------------------------
+
+29.4. - update omim databaze - nove stazeno + pridani sloupce Mane select z Vep anotace
+

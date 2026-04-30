@@ -301,7 +301,7 @@ process VCF2TXT {
 
 process VEP {
     tag "VEP on $name"
-    // publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy' 
+     // publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy' 
     //container "ensemblorg/ensembl-vep:release_108.0"
     container "ensemblorg/ensembl-vep:release_114.1"
   
@@ -314,14 +314,14 @@ process VEP {
     script:
     """
     vep -i ${name}.norm.vcf.gz --cache --cache_version 114 --dir_cache $params.vep \
-        --fasta ${params.ref}.fa --merged --offline --vcf --hgvs -o ${name}.vep.vcf \
-    --plugin CADD,snv=${params.caddsnv},indels=${params.caddindel} --dir_plugins ${params.vepplugin} --force_overwrite --no_stats --plugin AlphaMissense,file=${params.alfamissense} --plugin MaxEntScan,${params.MaxEntScan} --plugin SpliceAI,snv=${params.spliceaisnv},indel=${params.spliceaisnv}
+        --fasta ${params.ref}.fa --merged --offline --vcf --hgvs --mane_select -o ${name}.vep.vcf \
+    --dir_plugins ${params.vepplugin} --force_overwrite --no_stats --plugin AlphaMissense,file=${params.alfamissense} --plugin MaxEntScan,${params.MaxEntScan} --plugin SpliceAI,snv=${params.spliceaisnv},indel=${params.spliceaisnv}
     """
 }
 
 process BIOPET {
      tag "BIOPET on $name"
-     // publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
+      // publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
 
      input:
      tuple val(name), val(sample), path(vep)
@@ -369,11 +369,11 @@ process spojitannovarVEP {
         script:
         """
         echo "Merging ${final_txt} and ${vep_txt}"
-        awk '{print \$1, \$2, \$4, \$5, \$28, \$29, \$32, \$43, \$44, \$47, \$48, \$49, \$61, \$62, \$63, \$64, \$67, \$68}' ${vep_txt}  > vyber
+        awk '{print \$1, \$2, \$4, \$5, \$30, \$41, \$42, \$46, \$47, \$48, \$49, \$61, \$62, \$63, \$64, \$67, \$68}' ${vep_txt}  > vyber
         sed -i 's/ /\t/'g vyber
         paste ${final_txt}  vyber > spojeni
         
-        awk '{print \$1, \$2, \$3, \$4, \$15, \$16, \$17, \$18, \$19, \$50, \$51, \$52, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$48, \$49, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60, \$61}' spojeni > ${name}.merged.txt
+        awk '{print \$1, \$2, \$3, \$4, \$15, \$16, \$17, \$18, \$19, \$48, \$51, \$49, \$50, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60}' spojeni > ${name}.merged.txt
         
 sed -i 's/ /\t/'g ${name}.merged.txt
         """
