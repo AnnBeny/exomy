@@ -108,6 +108,25 @@ process QUALIMAP {
         """
 }
 
+process QUALIMAP_QC {
+
+    tag " QUALIMAP QC"
+
+    publishDir "${params.outDirectory}/${run_name}/qualimap/", mode: "copy"
+
+    input:
+    tuple val(run_name), path(qualimapfiles)
+
+    output:
+    path("qualimap_qc_summary.tsv")
+
+    script:
+    """
+    python3 ${projectDir}/scripts/picard_qc-qualimap.py $qualimapfiles
+    """
+}
+
+
 process MULTIQC3 {
         tag "MULTIQC3 on ${run_name} using $task.cpus CPUs and $task.memory memory"
         container "staphb/multiqc:1.30"
@@ -148,6 +167,24 @@ process PICARD {
         """
         java -jar /usr/picard/picard.jar CollectHsMetrics  I=$bam O=${name}.hs_metrics.txt R=${params.refindex}.fa BAIT_INTERVALS=${params.HyperExomeV2_capture.interval_list} TARGET_INTERVALS=${params.HyperExomeV2_primary_targets.interval_list}
         """
+}
+
+process PICARD_QC {
+
+    tag "Picard QC"
+
+    publishDir "${params.outDirectory}/${run_name}/picard/", mode: "copy"
+
+    input:
+    tuple val(run_name), path(hs_metrics)
+
+    output:
+    path("picard_qc_summary.tsv")
+
+    script:
+    """
+    python3 ${projectDir}/scripts/picard_qc.py
+    """
 }
 
 process MULTIQC2 {
@@ -444,6 +481,26 @@ sed -i 's/ /\t/'g ${name}.merged.txt
         """
 }
 
+process DATABAZEcp {
+        tag "kopirovani $name do databaze"
+
+        publishDir "/cmbg/AvitiDN/DatabazeExomy/input/${sample.run}", mode:'copy'
+
+        input:
+        tuple val(name), val(sample), path("${name}.merged.txt")
+
+        output: 
+        tuple val(name), val(sample)
+
+        script:
+        """
+
+        echo "kopiruju $name"
+        cp ${name}.merged.txt /cmbg/AvitiDN/DatabazeExomy/input/${sample.run}
+        """
+}
+
+
 process VIRT1 {
        tag "VIRT1 on $name"
        publishDir "${params.outDirectory}/${sample.run}/janaF/", mode:'copy'
@@ -735,8 +792,8 @@ kontrolabamu2 = QUALIMAP(aligned)
             tuple(run_name, all_files)
         }
 
+//QUALIMAP_QC(grouped_qualimap_files)
 MULTIQC3(grouped_qualimap_files)
-
 
 kontrolabamu3 = PICARD(aligned)
 
@@ -752,6 +809,7 @@ kontrolabamu3 = PICARD(aligned)
         }
 
 MULTIQC2(grouped_picard_files)
+PICARD_QC(grouped_picard_files)
 
 
 varcalling = GATK(aligned)
@@ -773,6 +831,8 @@ annovep = spojitannovarVEP(combined)
  virtpanel1 = VIRT1(annovep)
  virtpanel2 = VIRT2(annovep)
  virtpanel3 = VIRT3(annovep)
+
+database = DATABAZEcp(annovep)
 
 loh = LOH(normalizovany)
 graf = GNUPLOT(loh)
