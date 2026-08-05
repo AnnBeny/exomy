@@ -51,3 +51,7 @@ a z obou adresaru 2 multiqc reporty
 22.6. - update databaze v splice ai na spliceai_scores.raw.snv.ensembl_mane_v1.4.grch38.vcf.gz
 zmena v nextflow.config
 -------------------------------------------------
+
+30.7. -  vysledky picardu QC kontroly do samostatneho souboru. kopirovani finalnich varint - merged files k Anicce do databaze
+
+---------------------------------------------------
