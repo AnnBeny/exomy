@@ -41,6 +41,25 @@ process MULTIQC1 {
 
 }
 
+process FASTQ_QC {
+
+    tag "FASTQC"
+
+    publishDir "${params.outDirectory}/${run_name}/qc/", mode: "copy"
+
+    input:
+    tuple val(run_name), path(fastqcfiles)
+
+    output:
+    tuple val(run_name), path("fastqc_summary.tsv")
+
+    script:
+    """
+    python3 ${projectDir}/scripts/picard_qc-fastqc.py $fastqcfiles
+    """
+}
+
+
 process ALIGN {
 	tag "ALIGN on $name using $task.cpus CPUs and $task.memory memory"
 	publishDir "${params.outDirectory}/${sample.run}/mapped/", mode:'copy'
@@ -118,7 +137,7 @@ process QUALIMAP_QC {
     tuple val(run_name), path(qualimapfiles)
 
     output:
-    path("qualimap_qc_summary.tsv")
+    tuple val(run_name), path("qualimap_qc_summary.tsv")
 
     script:
     """
@@ -179,7 +198,7 @@ process PICARD_QC {
     tuple val(run_name), path(hs_metrics)
 
     output:
-    path("picard_qc_summary.tsv")
+    tuple val(run_name), path("picard_qc_summary.tsv")
 
     script:
     """
@@ -736,6 +755,23 @@ gnuplot ${name}.gnuplot.script
       """
 } 
 
+process MERGE_QC {
+
+    tag "Merge QC"
+
+    publishDir "${params.outDirectory}/${run_name}/", mode: "copy"
+
+    input:
+    tuple val(run_name), path(fastqc), path(picard), path(qualimap)
+
+    output:
+    path("qc_summary.tsv")
+
+    script:
+    """
+    python3 ${projectDir}/scripts/merge_qc.py $fastqc $picard $qualimap qc_summary.tsv
+    """
+}
 
 workflow {
         rawfastq = Channel.fromPath("${params.homeDir}/samplesheet.csv")
@@ -776,7 +812,6 @@ workflow {
 
 MULTIQC1(grouped_fastqc_files)
 
-
 aligned = ALIGN(rawfastq)
 // kontrolabamu1 = FLAGSTAT(aligned)
 kontrolabamu2 = QUALIMAP(aligned)
@@ -792,7 +827,6 @@ kontrolabamu2 = QUALIMAP(aligned)
             tuple(run_name, all_files)
         }
 
-//QUALIMAP_QC(grouped_qualimap_files)
 MULTIQC3(grouped_qualimap_files)
 
 kontrolabamu3 = PICARD(aligned)
@@ -809,7 +843,6 @@ kontrolabamu3 = PICARD(aligned)
         }
 
 MULTIQC2(grouped_picard_files)
-PICARD_QC(grouped_picard_files)
 
 
 varcalling = GATK(aligned)
@@ -843,4 +876,14 @@ coverage_files_collected = coverage_results
     .groupTuple() // groups by sample.run automatically!
 finalcoverage = COMBINECOVERAGEMEAN(coverage_files_collected)
 finalprocenta = COMBINECOVERAGEPROCENTA(coverage_files_collected)
+
+picard_ch = QUALIMAP_QC(grouped_qualimap_files)
+qualimap_ch = PICARD_QC(grouped_picard_files)
+fastqc_ch = FASTQ_QC(grouped_fastqc_files)
+
+qc_ch = picard_ch
+            .join(qualimap_ch)
+            .join(fastqc_ch)
+
+MERGE_QC(qc_ch)
 }

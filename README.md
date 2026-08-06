@@ -55,3 +55,5 @@ zmena v nextflow.config
 30.7. -  vysledky picardu QC kontroly do samostatneho souboru. kopirovani finalnich varint - merged files k Anicce do databaze
 
 ---------------------------------------------------
+
+6.8. - vytvoreni souhrne tabulky (qc_summary.tsv) z picardu, qualimapu a 1 parametru z fastqc
