@@ -57,3 +57,7 @@ zmena v nextflow.config
 ---------------------------------------------------
 
 6.8. - vytvoreni souhrne tabulky (qc_summary.tsv) z picardu, qualimapu a 1 parametru z fastqc
+-----------------------------------------------------
+
+17.8. - pridani ALAMUT sloupce cislo 5 nove a zakomentovani virt. 3 panelu pro janu fialovou - nepotrebuje je
+-----------------------------------------------------
