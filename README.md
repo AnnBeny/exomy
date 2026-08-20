@@ -61,3 +61,5 @@ zmena v nextflow.config
 
 17.8. - pridani ALAMUT sloupce cislo 5 nove a zakomentovani virt. 3 panelu pro janu fialovou - nepotrebuje je
 -----------------------------------------------------
+
+20.8. - kopirovani meerged files do Databaze Anicky, oprava chyby
