@@ -1,0 +1,112 @@
+k8s {
+   namespace = 'medgen-ns'
+   runAsUser = 1000
+   pod = [ [volumeClaim: 'pvc-cephfs', mountPath: "/cephfs" ]]
+   homeDir = '/cephfs/cmbg/Exom/src'
+   launchDir = "${k8s.homeDir}/launch"
+   projectDir = "${k8s.homeDir}/project"
+   workDir = "${k8s.homeDir}/temp"
+   computeResourceType = 'Job'
+}
+
+params {
+   homeDir = '/cephfs/cmbg/Exom/src'
+   outDirectory = '/cephfs/cmbg/Exom/data'
+   projectDirectory = "${k8s.projectDir}/kamilareblova/exomy"
+   ref = '/cephfs/cmbg/references/Homo_sapiens/GRCh38/full_only/GRCh38-p10'
+   refindex = '/cephfs/cmbg/references/Homo_sapiens/GRCh38/full_only/GRCh38-p10'
+   annovardb = '/cephfs/cmbg/references/Homo_sapiens/annovar/humandb-hg38'
+   ACGT = '/cephfs/cmbg/references/Homo_sapiens/ACGT/ACGT.ACCounts.noSamples.vcf.gz'
+   AR = '/cephfs/cmbg/references/Homo_sapiens/OMIM/AR.fin.bed.gz'
+   ARheader = '/cephfs/cmbg/references/Homo_sapiens/OMIM/header-AR.hdr'
+   AD = '/cephfs/cmbg/references/Homo_sapiens/OMIM/AD.fin.bed.gz'
+   ADheader = '/cephfs/cmbg/references/Homo_sapiens/OMIM/header-AD.hdr'
+   Xlinked = '/cephfs/cmbg/references/Homo_sapiens/OMIM/Xlinked.fin.bed.gz'
+   Xlinkedheader = '/cephfs/cmbg/references/Homo_sapiens/OMIM/header-Xlinked.hdr'
+   Ylinked = '/cephfs/cmbg/references/Homo_sapiens/OMIM/Ylinked.fin.bed.gz'
+   Ylinkedheader = '/cephfs/cmbg/references/Homo_sapiens/OMIM/header-Ylinked.hdr'
+   omimphenotyp = '/cephfs/cmbg/references/Homo_sapiens/OMIM/omim-phenotyp-new-v3.bed.gz'
+   omimphenotypheader = '/cephfs/cmbg/references/Homo_sapiens/OMIM/header-fenotyp.hdr'
+   hlavicka = "${k8s.projectDir}/kamilareblova/exomy/beds/hlavicka"
+   MetaRNN = '/cephfs/cmbg/references/Homo_sapiens/MetaRNN/MetaRNN.py'
+   varbed1 = "${k8s.projectDir}/kamilareblova/exomy/beds/HyperExomeV2_primary_targets+-20-merged.bed"
+   varbed2 = "${k8s.projectDir}/kamilareblova/exomy/beds/HyperExomeV2_primary_targets+-50-merged.bed"
+   teststrandbias = "${k8s.projectDir}/kamilareblova/exomy/scripts/teststrandbias.R"
+   var2vcf_valid = "${k8s.projectDir}/kamilareblova/exomy/scripts/var2vcf_valid.pl"
+   vcfsimplify = "${k8s.projectDir}/kamilareblova/exomy/scripts/vcf-simplify.py"
+   annovar = "${k8s.projectDir}/kamilareblova/exomy/scripts/table_annovar.pl"
+   gene_fullxref.txt = "${k8s.projectDir}/kamilareblova/exomy/scripts/gene_fullxref.txt"
+   convert2annovar.pl ="${k8s.projectDir}/kamilareblova/exomy/scripts/convert2annovar.pl"
+   coding_change.pl ="${k8s.projectDir}/kamilareblova/exomy/scripts/coding_change.pl"
+   annotate_variation.pl = "${k8s.projectDir}/kamilareblova/exomy/scripts/annotate_variation.pl"
+   vep = '/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep'
+   caddsnv ='/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep/Plugins/CADD/whole_genome_SNVs.tsv.gz'
+   caddindel ='/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep/Plugins/CADD/gnomad.genomes.r4.0.indel.tsv.gz'
+   vepplugin ='/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep/Plugins'
+   alfamissense ='/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep/Plugins/AlphaMissense/AlphaMissense_hg38.tsv.gz'
+   MaxEntScan='/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep/Plugins/MaxEntScan/fordownload'
+   spliceaisnv='/cephfs/cmbg/references/Homo_sapiens/GATK/GRCh38/Annotation/vep/Plugins/SpliceAI/spliceai_scores.raw.snv.ensembl_mane_v1.4.grch38.vcf.gz'
+   gene_filter = "${k8s.projectDir}/kamilareblova/exomy/scripts/exom_filter.R"
+   hemato = '/cephfs/cmbg/references/virtualpanely/hemato'
+   lipanek = '/cephfs/cmbg/references/virtualpanely/lipanek'
+   prekonc = '/cephfs/cmbg/references/virtualpanely/prekonc'
+   BRONCO = '/cephfs/cmbg/references/virtualpanely/BRONCO'
+   HBOC = '/cephfs/cmbg/references/virtualpanely/HBOC'
+   LYNCH = '/cephfs/cmbg/references/virtualpanely/LYNCH'
+   genoderm ='/cephfs/cmbg/references/virtualpanely/genoderm'
+   pojiva ='/cephfs/cmbg/references/virtualpanely/pojiva'
+   skelet ='/cephfs/cmbg/references/virtualpanely/skelet'
+   HyperExomeV2_primary_targets.interval_list ='/cephfs/cmbg/references/Homo_sapiens/picard/HyperExomeV2_primary_targets.interval_list'
+   HyperExomeV2_capture.interval_list ='/cephfs/cmbg/references/Homo_sapiens/picard/HyperExomeV2_capture.interval_list'
+   picard_qc = "${k8s.projectDir}/kamilareblova/exomy/scripts/picard_qc.py"
+   qualimap_qc = "${k8s.projectDir}/kamilareblova/exomy/scripts/picard_qc-qualimap.py"
+   omimcnv = '/cephfs/cmbg/references/gen-phenotyp2-uniq.txt'
+
+}
+
+
+executor {
+   queueSize = 50
+}
+
+
+process {
+   container = 'xreblova/exomy:v8'
+   shell = ['/bin/bash', '-eo', 'pipefail']
+   scratch = true
+   executor = 'k8s'
+   pod = [[securityContext:[fsGroupChangePolicy:'OnRootMismatch', allowPrivilegeEscalation:false, runAsUser:1000, capabilities:[drop:['ALL']]]], [nodeSelector:'storage=local-ssd']]
+   // errorStrategy = { task.exitStatus in [143,137,104,134,139,247, null, ''] ? 'retry' : 'finish' }
+   errorStrategy = "finish"
+  //  maxRetries = 3
+   cpus = 1
+   memory = '100GB'
+
+   withLabel: xxs_mem {
+      memory = {10.GB * task.attempt * (3/4)}
+   }
+   withLabel: xs_mem {
+      memory = {10.GB * task.attempt * (3/4)}
+   }
+   withLabel: s_mem {
+      memory = {10.GB * task.attempt * (3/4)}
+   }
+   withLabel: m_mem {
+      memory = {10.GB * task.attempt * (3/4)}
+   }
+   withLabel: l_mem {
+      memory = {100.GB * task.attempt * (3/4)}
+   }
+   withLabel: xl_mem {
+      memory = {100.GB * task.attempt * (3/4)}
+   }
+   withLabel: s_cpu {
+      cpus = 1
+   }
+   withLabel: m_cpu {
+      cpus = 4
+   }
+   withLabel: l_cpu {
+      cpus = 8
+   }
+}

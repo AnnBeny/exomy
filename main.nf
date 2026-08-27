@@ -494,18 +494,9 @@ process spojitannovarVEP {
         sed -i 's/ /\t/'g vyber
         paste ${final_txt}  vyber > spojeni
         
-        awk '{print \$1, \$2, \$3, \$4, \$15, \$16, \$17, \$18, \$19, \$48, \$51, \$49, \$50, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60}' spojeni > ${name}.m.txt
+        awk '{print \$1, \$2, \$3, \$4, \$15, \$16, \$17, \$18, \$19, \$48, \$51, \$49, \$50, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60}' spojeni > ${name}.merged.txt
         
-sed -i 's/ /\t/'g ${name}.m.txt
-
-        awk '{print "Chr"\$1"(GRCh38):g."\$2\$3">"\$4}' ${name}.m.txt > a
-        sed -i '1s/.*/ALAMUT/' a
-        paste ${name}.m.txt a > b
-        awk '{print \$1, \$2, \$3, \$4, \$61,\$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$15, \$16, \$17, \$18, \$19, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$48, \$49, \$50, \$51, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60}' b > ${name}.merged.txt
-        sed -i 's/ /\t/'g ${name}.merged.txt
-
-
-
+sed -i 's/ /\t/'g ${name}.merged.txt
         """
 }
 
@@ -518,12 +509,13 @@ process DATABAZEcp {
         tuple val(name), val(sample), path("${name}.merged.txt")
 
         output: 
-        tuple val(name), val(sample), path("${name}.merged.txt")
+        tuple val(name), val(sample)
 
         script:
         """
 
         echo "kopiruju $name"
+        cp ${name}.merged.txt /cmbg/AvitiDN/DatabazeExomy/input/${sample.run}
         """
 }
 
@@ -622,7 +614,7 @@ process COMBINECOVERAGEMEAN {
     publishDir { "${params.outDirectory}/${run_name}/mapped/" }, mode: 'copy'
 
     output:
-    path "coveragemeanALL"
+    tuple val(run_name), path("coveragemeanALL")
 
 
     script:
@@ -781,6 +773,30 @@ process MERGE_QC {
     """
 }
 
+process CNV_R {
+
+    tag "CNV_R"
+    publishDir "${params.outDirectory}/${run_name}/CNV", mode: "copy"
+    container "rocker/tidyverse:4"
+       
+    input:
+    tuple val(run_name), path(coverage), path(pohlavi)
+
+    output:
+    path "CNV_M.csv", optional: true
+    path "CNV_Z.csv", optional: true
+
+    script:
+    """
+    echo "CNV_R for run: ${run_name}"
+    echo "Coverage: ${coverage}"
+    echo "Sex file: ${pohlavi}"
+
+    Rscript ${projectDir}/scripts/cnv.R ${params.omimcnv} ${coverage} ${pohlavi}
+    """
+}
+
+
 workflow {
         rawfastq = Channel.fromPath("${params.homeDir}/samplesheet.csv")
     .splitCsv(header: true)
@@ -795,7 +811,7 @@ workflow {
         def fileR1 = file("${runDir}/processed_fastq/${row.name}_R1.fastq.gz", checkIfExists: true)
         def fileR2 = file("${runDir}/processed_fastq/${row.name}_R2.fastq.gz", checkIfExists: true)
 
-                def meta = [name: row.name, run: row.run]
+                def meta = [name: row.name, run: row.run, pohlavi: row.pohlavi]
         [
             meta.name,
             meta,
@@ -805,78 +821,78 @@ workflow {
     }
      . view()
 
- kontrola1 = FASTQC1(rawfastq)
+// kontrola1 = FASTQC1(rawfastq)
 
  //Group the FASTQC1 output files by run name
-    grouped_fastqc_files = kontrola1
-        .map { name, sample, r1html, r2html, r1zip, r2zip ->
-            tuple(sample.run, [r1html, r2html, r1zip, r2zip])
-        }
-        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
-        .map { run_name, lists_of_files ->
-            def all_files = lists_of_files.flatten()
-            tuple(run_name, all_files)
-        }
+//    grouped_fastqc_files = kontrola1
+//        .map { name, sample, r1html, r2html, r1zip, r2zip ->
+//            tuple(sample.run, [r1html, r2html, r1zip, r2zip])
+//        }
+//        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
+//        .map { run_name, lists_of_files ->
+//            def all_files = lists_of_files.flatten()
+//            tuple(run_name, all_files)
+//        }
 
-MULTIQC1(grouped_fastqc_files)
+//MULTIQC1(grouped_fastqc_files)
 
 aligned = ALIGN(rawfastq)
 // kontrolabamu1 = FLAGSTAT(aligned)
-kontrolabamu2 = QUALIMAP(aligned)
+//kontrolabamu2 = QUALIMAP(aligned)
 
 //Group the QUALIMAP output files by run name
-    grouped_qualimap_files = kontrolabamu2
-        .map { name, sample, qualimap_dir ->
-            tuple(sample.run, qualimap_dir)
-        }
-        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
-        .map { run_name, lists_of_files ->
-            def all_files = lists_of_files.flatten()
-            tuple(run_name, all_files)
-        }
+//    grouped_qualimap_files = kontrolabamu2
+//       .map { name, sample, qualimap_dir ->
+//            tuple(sample.run, qualimap_dir)
+//        }
+//        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
+//        .map { run_name, lists_of_files ->
+//            def all_files = lists_of_files.flatten()
+//            tuple(run_name, all_files)
+//        }
 
-MULTIQC3(grouped_qualimap_files)
+//MULTIQC3(grouped_qualimap_files)
 
-kontrolabamu3 = PICARD(aligned)
+//kontrolabamu3 = PICARD(aligned)
 
 //Group the PICARD output files by run name
-    grouped_picard_files = kontrolabamu3
-        .map { name, sample, hsmetrics ->
-            tuple(sample.run, [hsmetrics])
-        }
-        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
-        .map { run_name, lists_of_files ->
-            def all_files = lists_of_files.flatten()
-            tuple(run_name, all_files)
-        }
+//    grouped_picard_files = kontrolabamu3
+//        .map { name, sample, hsmetrics ->
+//            tuple(sample.run, [hsmetrics])
+//        }
+//        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
+//        .map { run_name, lists_of_files ->
+//            def all_files = lists_of_files.flatten()
+//            tuple(run_name, all_files)
+//        }
 
-MULTIQC2(grouped_picard_files)
+//MULTIQC2(grouped_picard_files)
 
 
-varcalling = GATK(aligned)
-normalizovany = VAFaNORMALIZACE(varcalling)
+//varcalling = GATK(aligned)
+//normalizovany = VAFaNORMALIZACE(varcalling)
 
-anotovanyacgt = ANOTACE_ACGT(normalizovany)
-anotovanyomim = ANOTACE_OMIM(anotovanyacgt)
-metarnnskore = MetaRNN(anotovanyomim)
-anotovanymetarnn = ANOTACE_MetaRNN(metarnnskore)
-anotovany = ANOTACE_annovar(anotovanymetarnn)
-anotovanyfin = VCF2TXT(anotovany)
+//anotovanyacgt = ANOTACE_ACGT(normalizovany)
+//anotovanyomim = ANOTACE_OMIM(anotovanyacgt)
+//metarnnskore = MetaRNN(anotovanyomim)
+//anotovanymetarnn = ANOTACE_MetaRNN(metarnnskore)
+//anotovany = ANOTACE_annovar(anotovanymetarnn)
+//anotovanyfin = VCF2TXT(anotovany)
 
-vepovany = VEP(normalizovany)
-biopetovany = BIOPET(vepovany)
-textovany = VCFTOTXTVEP(biopetovany)
+//vepovany = VEP(normalizovany)
+//biopetovany = BIOPET(vepovany)
+//textovany = VCFTOTXTVEP(biopetovany)
 
-combined = anotovanyfin.join(textovany, by: [0,1])
-annovep = spojitannovarVEP(combined)
-//virtpanel1 = VIRT1(annovep)
- virtpanel2 = VIRT2(annovep)
- virtpanel3 = VIRT3(annovep)
+//combined = anotovanyfin.join(textovany, by: [0,1])
+//annovep = spojitannovarVEP(combined)
+// virtpanel1 = VIRT1(annovep)
+// virtpanel2 = VIRT2(annovep)
+// virtpanel3 = VIRT3(annovep)
 
-database = DATABAZEcp(annovep)
+//database = DATABAZEcp(annovep)
 
-loh = LOH(normalizovany)
-graf = GNUPLOT(loh)
+//loh = LOH(normalizovany)
+//graf = GNUPLOT(loh)
 
 coverage_results = COVERAGE1(aligned)
 coverage_files_collected = coverage_results
@@ -885,13 +901,42 @@ coverage_files_collected = coverage_results
 finalcoverage = COMBINECOVERAGEMEAN(coverage_files_collected)
 finalprocenta = COMBINECOVERAGEPROCENTA(coverage_files_collected)
 
-picard_ch = QUALIMAP_QC(grouped_qualimap_files)
-qualimap_ch = PICARD_QC(grouped_picard_files)
-fastqc_ch = FASTQ_QC(grouped_fastqc_files)
+finalcoverage_all = finalcoverage
+    .map { run_name, f -> f }
+    .collect()
 
-qc_ch = picard_ch
-            .join(qualimap_ch)
-            .join(fastqc_ch)
+pohlavi_ch = Channel
+    .fromPath("${params.homeDir}/samplesheet.csv")
+    .splitCsv(header: true)
+    .map { row ->
+        tuple(row.run, "${row.name}.COV-mean;${row.pohlavi}")
+    }
+    .groupTuple()
+    .map { run_name, rows ->
+        def f = file("${run_name}_pohlavi.csv")
+        f.text = "ID;Pacient\n" + rows.join("\n")
+        tuple(run_name, f)
+    }
+pohlavi_ch.view { "POHLAVI: $it" }
 
-MERGE_QC(qc_ch)
+finalcoverage.view { "FINALCOVERAGE: $it" }
+
+pohlavi_ch.view { "POHLAVI: $it" }
+
+
+cnv_input = finalcoverage.join(pohlavi_ch)
+
+cnv_input.view { "CNV_INPUT: $it" }
+
+CNV_R(cnv_input)
+
+//picard_ch = QUALIMAP_QC(grouped_qualimap_files)
+//qualimap_ch = PICARD_QC(grouped_picard_files)
+//fastqc_ch = FASTQ_QC(grouped_fastqc_files)
+
+//qc_ch = picard_ch
+//            .join(qualimap_ch)
+//            .join(fastqc_ch)
+
+//MERGE_QC(qc_ch)
 }
