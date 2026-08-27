@@ -821,78 +821,78 @@ workflow {
     }
      . view()
 
-// kontrola1 = FASTQC1(rawfastq)
+ kontrola1 = FASTQC1(rawfastq)
 
  //Group the FASTQC1 output files by run name
-//    grouped_fastqc_files = kontrola1
-//        .map { name, sample, r1html, r2html, r1zip, r2zip ->
-//            tuple(sample.run, [r1html, r2html, r1zip, r2zip])
-//        }
-//        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
-//        .map { run_name, lists_of_files ->
-//            def all_files = lists_of_files.flatten()
-//            tuple(run_name, all_files)
-//        }
+    grouped_fastqc_files = kontrola1
+        .map { name, sample, r1html, r2html, r1zip, r2zip ->
+            tuple(sample.run, [r1html, r2html, r1zip, r2zip])
+        }
+        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
+        .map { run_name, lists_of_files ->
+            def all_files = lists_of_files.flatten()
+            tuple(run_name, all_files)
+        }
 
-//MULTIQC1(grouped_fastqc_files)
+MULTIQC1(grouped_fastqc_files)
 
 aligned = ALIGN(rawfastq)
 // kontrolabamu1 = FLAGSTAT(aligned)
-//kontrolabamu2 = QUALIMAP(aligned)
+kontrolabamu2 = QUALIMAP(aligned)
 
 //Group the QUALIMAP output files by run name
-//    grouped_qualimap_files = kontrolabamu2
-//       .map { name, sample, qualimap_dir ->
-//            tuple(sample.run, qualimap_dir)
-//        }
-//        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
-//        .map { run_name, lists_of_files ->
-//            def all_files = lists_of_files.flatten()
-//            tuple(run_name, all_files)
-//        }
+    grouped_qualimap_files = kontrolabamu2
+       .map { name, sample, qualimap_dir ->
+            tuple(sample.run, qualimap_dir)
+        }
+        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
+        .map { run_name, lists_of_files ->
+            def all_files = lists_of_files.flatten()
+            tuple(run_name, all_files)
+        }
 
-//MULTIQC3(grouped_qualimap_files)
+MULTIQC3(grouped_qualimap_files)
 
-//kontrolabamu3 = PICARD(aligned)
+kontrolabamu3 = PICARD(aligned)
 
 //Group the PICARD output files by run name
-//    grouped_picard_files = kontrolabamu3
-//        .map { name, sample, hsmetrics ->
-//            tuple(sample.run, [hsmetrics])
-//        }
-//        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
-//        .map { run_name, lists_of_files ->
-//            def all_files = lists_of_files.flatten()
-//            tuple(run_name, all_files)
-//        }
+    grouped_picard_files = kontrolabamu3
+        .map { name, sample, hsmetrics ->
+            tuple(sample.run, [hsmetrics])
+        }
+        .groupTuple()           // groups by run name: [run_name: [[files], [files], ...]]
+        .map { run_name, lists_of_files ->
+            def all_files = lists_of_files.flatten()
+            tuple(run_name, all_files)
+        }
 
-//MULTIQC2(grouped_picard_files)
+MULTIQC2(grouped_picard_files)
 
 
-//varcalling = GATK(aligned)
-//normalizovany = VAFaNORMALIZACE(varcalling)
+varcalling = GATK(aligned)
+normalizovany = VAFaNORMALIZACE(varcalling)
 
-//anotovanyacgt = ANOTACE_ACGT(normalizovany)
-//anotovanyomim = ANOTACE_OMIM(anotovanyacgt)
-//metarnnskore = MetaRNN(anotovanyomim)
-//anotovanymetarnn = ANOTACE_MetaRNN(metarnnskore)
-//anotovany = ANOTACE_annovar(anotovanymetarnn)
-//anotovanyfin = VCF2TXT(anotovany)
+anotovanyacgt = ANOTACE_ACGT(normalizovany)
+anotovanyomim = ANOTACE_OMIM(anotovanyacgt)
+metarnnskore = MetaRNN(anotovanyomim)
+anotovanymetarnn = ANOTACE_MetaRNN(metarnnskore)
+anotovany = ANOTACE_annovar(anotovanymetarnn)
+anotovanyfin = VCF2TXT(anotovany)
 
-//vepovany = VEP(normalizovany)
-//biopetovany = BIOPET(vepovany)
-//textovany = VCFTOTXTVEP(biopetovany)
+vepovany = VEP(normalizovany)
+biopetovany = BIOPET(vepovany)
+textovany = VCFTOTXTVEP(biopetovany)
 
-//combined = anotovanyfin.join(textovany, by: [0,1])
-//annovep = spojitannovarVEP(combined)
+combined = anotovanyfin.join(textovany, by: [0,1])
+annovep = spojitannovarVEP(combined)
 // virtpanel1 = VIRT1(annovep)
 // virtpanel2 = VIRT2(annovep)
 // virtpanel3 = VIRT3(annovep)
 
-//database = DATABAZEcp(annovep)
+database = DATABAZEcp(annovep)
 
-//loh = LOH(normalizovany)
-//graf = GNUPLOT(loh)
+loh = LOH(normalizovany)
+graf = GNUPLOT(loh)
 
 coverage_results = COVERAGE1(aligned)
 coverage_files_collected = coverage_results
@@ -930,13 +930,13 @@ cnv_input.view { "CNV_INPUT: $it" }
 
 CNV_R(cnv_input)
 
-//picard_ch = QUALIMAP_QC(grouped_qualimap_files)
-//qualimap_ch = PICARD_QC(grouped_picard_files)
-//fastqc_ch = FASTQ_QC(grouped_fastqc_files)
+picard_ch = QUALIMAP_QC(grouped_qualimap_files)
+qualimap_ch = PICARD_QC(grouped_picard_files)
+fastqc_ch = FASTQ_QC(grouped_fastqc_files)
 
-//qc_ch = picard_ch
-//            .join(qualimap_ch)
-//            .join(fastqc_ch)
+qc_ch = picard_ch
+            .join(qualimap_ch)
+            .join(fastqc_ch)
 
-//MERGE_QC(qc_ch)
+MERGE_QC(qc_ch)
 }
