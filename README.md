@@ -63,3 +63,8 @@ zmena v nextflow.config
 -----------------------------------------------------
 
 20.8. - kopirovani meerged files do Databaze Anicky, oprava chyby
+
+----------------------------------------------------
+
+2.9. - pridana analyza CNV, generuji se soubory CNV_M.csv  CNV_Z.csv ve slozce CNV
++ opraveno kopirovani do databaze Anicky, pres matrix prostredi po konzultaci s umelakem

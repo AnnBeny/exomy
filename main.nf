@@ -503,19 +503,18 @@ sed -i 's/ /\t/'g ${name}.merged.txt
 process DATABAZEcp {
         tag "kopirovani $name do databaze"
 
-        publishDir "/cmbg/AvitiDN/DatabazeExomy/input/${sample.run}", mode:'copy'
+        publishDir "/cephfs/cmbg/AvitiDN/DatabazeExomy/input/${sample.run}", mode:'copy'
 
         input:
         tuple val(name), val(sample), path("${name}.merged.txt")
 
         output: 
-        tuple val(name), val(sample)
+        tuple val(name), val(sample), path("${name}.merged.txt")
 
         script:
         """
 
         echo "kopiruju $name"
-        cp ${name}.merged.txt /cmbg/AvitiDN/DatabazeExomy/input/${sample.run}
         """
 }
 
