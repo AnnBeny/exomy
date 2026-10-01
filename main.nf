@@ -1014,7 +1014,7 @@ annovepmane = spojitannovarVEPmane(combined2)
 // virtpanel2 = VIRT2(annovep)
 // virtpanel3 = VIRT3(annovep)
 
-//database = DATABAZEcp(annovep)
+database = DATABAZEcp(annovep)
 
 loh = LOH(normalizovany)
 graf = GNUPLOT(loh)
