@@ -84,3 +84,7 @@ navic pridany 2 nove sloupce do variant, kde je mapabilita pro k50 a k100
 23.9. pridan novy proces - CALCULATE_SMN1_COVERAGE
 
 --------------------------------------------------------
+1.10. - pridany sloupce VEP_MANE_HGVSc  VEP_MANE_HGVSp
+
+----------------------------------------------------------
+

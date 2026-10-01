@@ -435,22 +435,45 @@ process VEP {
     tuple val(name), val(sample), path("${name}.norm.vcf.gz"), path("${name}.norm.vcf.gz.tbi")
  
     output:
-    tuple val(name), val(sample), path("${name}.vep.vcf")
+    tuple val(name), val(sample), path("${name}.vep.vcf"), path("${name}.vep.json")
 
     script:
     """
     vep -i ${name}.norm.vcf.gz --cache --cache_version 114 --dir_cache $params.vep \
         --fasta ${params.ref}.fa --merged --offline --vcf --hgvs --mane_select -o ${name}.vep.vcf \
     --dir_plugins ${params.vepplugin} --force_overwrite --no_stats --plugin AlphaMissense,file=${params.alfamissense} --plugin MaxEntScan,${params.MaxEntScan} --plugin SpliceAI,snv=${params.spliceaisnv},indel=${params.spliceaisnv}
+ 
+    vep -i ${name}.norm.vcf.gz --cache --cache_version 114 --dir_cache $params.vep \
+        --fasta ${params.ref}.fa --merged --offline --mane_select --force_overwrite --hgvs --json -o ${name}.vep.json
+
     """
 }
+
+process EXTRACT_MANE {
+
+        tag "Extract MANE on $name"
+        publishDir "${params.outDirectory}/${sample.run}/vep-mane/", mode:'copy'
+
+        input:
+        tuple val(name), val(sample), path("${name}.vep.vcf"), path("${name}.vep.json")
+
+        output:
+        tuple val(name), val(sample), path("${name}.mane.tsv")
+
+        script:
+        """
+        python ${projectDir}/scripts/extract_mane.py ${name}.vep.json ${name}.mane.tsv
+        """
+}
+
+
 
 process BIOPET {
      tag "BIOPET on $name"
       // publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
 
      input:
-     tuple val(name), val(sample), path(vep)
+     tuple val(name), val(sample), path("${name}.vep.vcf"), path("${name}.vep.json")
 
      output:
      tuple val(name), val(sample), path("${name}.vepalpfa.anot.vcf")
@@ -458,7 +481,7 @@ process BIOPET {
      script:
      """
      source activate biopet
-     biopet tool VepNormalizer -I $vep -O ${name}.vepalpfa.anot.vcf -m standard
+     biopet tool VepNormalizer -I ${name}.vep.vcf -O ${name}.vepalpfa.anot.vcf -m standard
      """
 }
 
@@ -484,13 +507,13 @@ process VCFTOTXTVEP {
 process spojitannovarVEP {
 
         tag "spojitannovarVEP on $name"
-        publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
+        //publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
         // awk '{for(\i=1;\i<=4;\i++) printf "%s ", $i; for(\i=15;\i<=19;\i++) printf "%s ", $i; for(i=50;i<=51;i++) printf "%s ", $i; for(i=5;i<=14;i++) printf "%s ", $i; for(i=20;i<=49;i++) printf "%s ", $i; for(i=52;i<=60;i++) printf "%s ", $i; printf "\n" }' spojeni > ${name}.merged.txt
         input:
         tuple val(name), val(sample), path(final_txt), path(vep_txt)
 
         output:
-        tuple val(name), val(sample), path("${name}.merged.txt")
+        tuple val(name), val(sample), path("${name}.m.txt")
 
         script:
         """
@@ -506,12 +529,38 @@ sed -i 's/ /\t/'g ${name}.m.txt
         awk '{print "Chr"\$1"(GRCh38):g."\$2\$3">"\$4}' ${name}.m.txt > a
         sed -i '1s/.*/ALAMUT/' a
         paste ${name}.m.txt a > b
-        awk '{print \$1, \$2, \$3, \$4, \$6, \$5, \$63, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$15, \$16, \$17, \$18, \$19, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$48, \$49, \$50, \$51, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60, \$61, \$62}' b > ${name}.merged.txt
-        sed -i 's/ /\t/'g ${name}.merged.txt
+        awk '{print \$1, \$2, \$3, \$4, \$6, \$5, \$63, \$7, \$8, \$9, \$10, \$11, \$12, \$13, \$14, \$15, \$16, \$17, \$18, \$19, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$48, \$49, \$50, \$51, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60, \$61, \$62}' b > ${name}.m.txt
+        sed -i 's/ /\t/'g ${name}.m.txt
 
        
         """
 }
+
+process spojitannovarVEPmane {
+
+        tag "spojitannovarVEPmane on $name"
+        publishDir "${params.outDirectory}/${sample.run}/varianty/", mode:'copy'
+
+        input:
+        tuple val(name), val(sample), path(m_txt), path(vep_mane)
+
+        output:
+        tuple val(name), val(sample), path("${name}.merged.txt")
+
+        script:
+        """
+        echo "Merging ${m_txt} ${vep_mane}"
+
+        paste ${m_txt} ${vep_mane} > ${name}.pok.txt
+        
+        awk '{print \$1, \$2, \$3, \$4, \$5, \$6, \$7, \$8, \$9, \$10, \$11, \$12, \$69, \$70, \$13, \$14, \$15, \$16, \$17, \$18, \$19, \$20, \$21, \$22, \$23, \$24, \$25, \$26, \$27, \$28, \$29, \$30, \$31, \$32, \$33, \$34, \$35, \$36, \$37, \$38, \$39, \$40, \$41, \$42, \$43, \$44, \$45, \$46, \$47, \$48, \$49, \$50, \$51, \$52, \$53, \$54, \$55, \$56, \$57, \$58, \$59, \$60, \$61, \$62, \$63}' ${name}.pok.txt >  ${name}.merged.txt
+        
+        sed -i 's/ /\t/'g ${name}.merged.txt
+
+        """
+}
+
+
 
 process DATABAZEcp {
         tag "kopirovani $name do databaze"
@@ -948,16 +997,24 @@ anotovany = ANOTACE_annovar(anotovanymetarnn)
 anotovanyfin = VCF2TXT(anotovany)
 
 vepovany = VEP(normalizovany)
+extractmane = EXTRACT_MANE(vepovany)
+
 biopetovany = BIOPET(vepovany)
 textovany = VCFTOTXTVEP(biopetovany)
 
 combined = anotovanyfin.join(textovany, by: [0,1])
 annovep = spojitannovarVEP(combined)
+
+combined2 = annovep.join(extractmane, by: [0,1])
+annovepmane = spojitannovarVEPmane(combined2)
+
+
+
 // virtpanel1 = VIRT1(annovep)
 // virtpanel2 = VIRT2(annovep)
 // virtpanel3 = VIRT3(annovep)
 
-database = DATABAZEcp(annovep)
+//database = DATABAZEcp(annovep)
 
 loh = LOH(normalizovany)
 graf = GNUPLOT(loh)
